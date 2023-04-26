@@ -26,8 +26,6 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, mux_cha
               help="Do not try to resync Chapters forward in time.")
 @click.option("-nb", "--no-backward", is_flag=True, default=False,
               help="Do not try to resync Chapters backward in time.")
-@click.option("-nr", "--no-resync", is_flag=True, default=False,
-              help="Do not try to resync Chapters that are already synced.")
 @click.option("-k", "--keyframes", is_flag=True, default=False,
               help="Only sync to Scene Changes on Keyframes (I-frames).")
 def main(
@@ -37,7 +35,6 @@ def main(
     offset: float | None,
     no_forward: bool,
     no_backward: bool,
-    no_resync: bool,
     keyframes: bool
 ):
     """
@@ -103,10 +100,7 @@ def main(
 
         name = chapter.get("tags", {}).get("title")
 
-        if no_resync:
-            is_already_timed = any(float(x["best_effort_timestamp_time"]) == start_time for x in scene_changes)
-        else:
-            is_already_timed = False
+        is_already_timed = any(float(x["best_effort_timestamp_time"]) == start_time for x in scene_changes)
 
         if is_already_timed:
             new_chapter_table.add_row(
