@@ -180,23 +180,24 @@ def main(
     chapters_file_path = video.with_suffix(f"{video.suffix}.retimed_chapters.txt")
     chapters_file_path.write_text(new_chapter_file, encoding="utf8")
 
-    muxing_progress = Progress(
-        TextColumn("[progress.description]{task.description}"),
-        SpinnerColumn(finished_text=""),
-        BarColumn(),
-        "•",
-        TimeRemainingColumn(compact=True, elapsed_when_finished=True)
-    )
-
-    with muxing_progress:
-        task = muxing_progress.add_task("Multiplexing...", total=100, start=True)
-        out_path = video.with_stem(video.stem + " (Resynced)")
-        mux_chapters(
-            video,
-            chapters_file_path,
-            out_path,
-            progress=partial(muxing_progress.update, task_id=task)
+    if video.suffix.lower() == ".mkv":
+        muxing_progress = Progress(
+            TextColumn("[progress.description]{task.description}"),
+            SpinnerColumn(finished_text=""),
+            BarColumn(),
+            "•",
+            TimeRemainingColumn(compact=True, elapsed_when_finished=True)
         )
+
+        with muxing_progress:
+            task = muxing_progress.add_task("Multiplexing...", total=100, start=True)
+            out_path = video.with_stem(video.stem + " (Resynced)")
+            mux_chapters(
+                video,
+                chapters_file_path,
+                out_path,
+                progress=partial(muxing_progress.update, task_id=task)
+            )
 
     print(":tada: Done!")
 
