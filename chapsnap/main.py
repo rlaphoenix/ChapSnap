@@ -24,7 +24,17 @@ from utilities import get_chapters, get_scene_changes, format_timestamp
               help="Do not try to resync Chapters backward in time.")
 @click.option("-nr", "--no-resync", is_flag=True, default=False,
               help="Do not try to resync Chapters that are already synced.")
-def main(video: Path, threshold: float, offset: float | None, no_forward: bool, no_backward: bool, no_resync: bool):
+@click.option("-k", "--keyframes", is_flag=True, default=False,
+              help="Only sync to Scene Changes on Keyframes (I-frames).")
+def main(
+    video: Path,
+    threshold: float,
+    offset: float | None,
+    no_forward: bool,
+    no_backward: bool,
+    no_resync: bool,
+    keyframes: bool
+):
     if offset is not None and not isinstance(offset, float):
         raise click.ClickException(f"Expected offset to be a {float} not {offset!r}")
 
@@ -80,7 +90,8 @@ def main(video: Path, threshold: float, offset: float | None, no_forward: bool, 
                 closest_forward = next((
                     float(x["best_effort_timestamp_time"])
                     for x in scene_changes
-                    if float(x["best_effort_timestamp_time"]) > start_time
+                    if float(x["best_effort_timestamp_time"]) > start_time and
+                    (not keyframes or x["pict_type"] == "I")
                 ), 0.0)
 
             if no_backward or start_time == 0.0:
@@ -89,7 +100,8 @@ def main(video: Path, threshold: float, offset: float | None, no_forward: bool, 
                 closest_backward = next(
                     float(x["best_effort_timestamp_time"])
                     for x in reversed(scene_changes)
-                    if float(x["best_effort_timestamp_time"]) <= start_time
+                    if float(x["best_effort_timestamp_time"]) <= start_time and
+                    (not keyframes or x["pict_type"] == "I")
                 )
 
             closest = min((closest_forward, closest_backward), key=lambda x: abs(x - start_time))
