@@ -103,6 +103,23 @@ files = [
 plugins = ["importlib-metadata"]
 
 [[package]]
+name = "pymediainfo"
+version = "6.0.1"
+description = "A Python wrapper for the mediainfo library."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pymediainfo-6.0.1-py3-none-macosx_10_15_x86_64.whl", hash = "sha256:81165e895e1e362fa11c128ce2bc976cb8a74224f96f309a88ee047106041b0a"},
+    {file = "pymediainfo-6.0.1-py3-none-win32.whl", hash = "sha256:bb3a48ac9706626fd2fa7881f4271728459a1c9a082917deb0c7dd343d8a1be5"},
+    {file = "pymediainfo-6.0.1-py3-none-win_amd64.whl", hash = "sha256:c38e79d4d2062732ae555b564c3cac18a6de4f36e033066c617f386cf5e77564"},
+    {file = "pymediainfo-6.0.1.tar.gz", hash = "sha256:96e04bac0dfcb726bed70c314b1219121c4b9344c66a98f426ce27d7f9abffb0"},
+]
+
+[package.dependencies]
+importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
+
+[[package]]
 name = "rich"
 version = "13.3.4"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
@@ -153,4 +170,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<3.12"
-content-hash = "7778d73682374715493d9c4c5878bdd15d9c65b8b2f996a0a2c89aa0326e8d3c"
+content-hash = "b7daf31e003781eee866a98f00f93fdecf726fcd20d6e0579ccec9ab39a7e8f5"
