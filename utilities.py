@@ -118,5 +118,6 @@ def set_chapters(video_path: Path, chapters_path: Path) -> int:
     return subprocess.check_call([
         "mkvpropedit",
         video_path,
+        "--chapters", "",
         "--chapters", chapters_path
     ])
