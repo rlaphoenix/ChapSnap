@@ -141,6 +141,16 @@ def main(
             cb = [" ", "*"][closest == closest_backward]
             cf = [" ", "*"][closest == closest_forward]
 
+            if closest in new_chapter_timestamps:
+                new_chapter_table.add_row(
+                    "--",
+                    format_timestamp(start_time),
+                    format_timestamp(closest),
+                    f"{closest - start_time:.2f}",
+                    "Removed, matched previous chapter"
+                )
+                continue
+
             new_chapter_table.add_row(
                 f"{i:02}",
                 format_timestamp(start_time),
