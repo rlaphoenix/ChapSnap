@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 from rich.status import Status
-from rich.table import Table
+from rich.table import Table, Column
 from rich.progress import Progress
 from rich.progress import TextColumn, SpinnerColumn, BarColumn, TimeRemainingColumn
 from rich import print
@@ -55,11 +55,13 @@ def main(
 
     with Status("Analyzing Video for Scene Changes (this could take a while)..."):
         scene_changes = get_scene_changes(video, threshold)
-        scene_change_table = Table(title="Scene Changes")
-        scene_change_table.add_column("#", justify="right")
-        scene_change_table.add_column("Timestamp")
-        scene_change_table.add_column("Type")
-        scene_change_table.add_column("Score")
+        scene_change_table = Table(
+            Column("#", justify="right"),
+            "Timestamp",
+            "Type",
+            "Score",
+            title="Scene Changes"
+        )
         for i, scene_change in enumerate(scene_changes, start=1):
             timestamp = format_timestamp(float(scene_change["best_effort_timestamp_time"]))
             scene_change_table.add_row(
@@ -69,6 +71,15 @@ def main(
                 scene_change["tags"]["lavfi.scene_score"]
             )
         print(scene_change_table)
+
+    new_chapter_table = Table(
+        Column("#", justify="right"),
+        "Before",
+        "After",
+        "Change",
+        "Closest Scene Changes",
+        title="Chapter Modifications"
+    )
 
     new_chapter_timestamps = {}
 
@@ -85,7 +96,13 @@ def main(
             is_already_timed = False
 
         if is_already_timed:
-            print(f"- Chapter {i} ({start_time})", "is already synced to a Scene Change")
+            new_chapter_table.add_row(
+                f"{i:02}",
+                format_timestamp(start_time),
+                format_timestamp(start_time),
+                "0.00",
+                "Already synced, skipped..."
+            )
         else:
             if no_forward:
                 closest_forward = 0.0
@@ -108,15 +125,25 @@ def main(
                 )
 
             closest = min((closest_forward, closest_backward), key=lambda x: abs(x - start_time))
+            cb = [" ", "*"][closest == closest_backward]
+            cf = [" ", "*"][closest == closest_forward]
 
-            print(f"- Chapter {i} ({start_time})", closest, f"{closest_forward} (Forward)",
-                  f"{closest_backward} (Backward)")
+            new_chapter_table.add_row(
+                f"{i:02}",
+                format_timestamp(start_time),
+                format_timestamp(closest),
+                f"{closest - start_time:.2f}",
+                f"{format_timestamp(closest_backward)}{cb} <- | -> {format_timestamp(closest_forward)}{cf}"
+            )
+
             start_time = closest
 
             if datetime.strptime(name, "%H:%M:%S.%f"):
                 name = format_timestamp(start_time)
 
         new_chapter_timestamps[start_time] = name
+
+    print(new_chapter_table)
 
     new_chapter_file = "\n".join([
         line
