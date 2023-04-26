@@ -114,17 +114,9 @@ def get_scene_changes(video_path: Path, threshold: float) -> list[dict[str, Any]
     return scene_changes
 
 
-def mux_chapters(video_path: Path, chapters_path: Path, out_path: Path, progress: partial) -> int:
-    p = subprocess.Popen([
-        "mkvmerge",
+def set_chapters(video_path: Path, chapters_path: Path) -> int:
+    return subprocess.check_call([
+        "mkvpropedit",
         video_path,
-        "--output", out_path,
-        "--chapters", chapters_path,
-        "--gui-mode"
-    ], text=True, stdout=subprocess.PIPE)
-
-    for line in iter(p.stdout.readline, ""):
-        if "progress" in line:
-            progress(total=100, completed=int(line.strip()[14:-1]))
-
-    return p.wait()
+        "--chapters", chapters_path
+    ])

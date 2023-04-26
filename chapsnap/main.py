@@ -1,18 +1,16 @@
 from __future__ import annotations
 
+import shutil
 from datetime import datetime
-from functools import partial
 from pathlib import Path
 
 import click
 from rich.status import Status
 from rich.table import Table, Column
-from rich.progress import Progress
-from rich.progress import TextColumn, SpinnerColumn, BarColumn, TimeRemainingColumn
 from rich import print
 from pymediainfo import MediaInfo
 
-from utilities import get_chapters, get_scene_changes, format_timestamp, mux_chapters, load_chapters_file
+from utilities import get_chapters, get_scene_changes, format_timestamp, load_chapters_file, set_chapters
 
 
 @click.command()
@@ -214,23 +212,10 @@ def main(
         chapters_file_path.write_text(new_chapter_file, encoding="utf8")
 
         if video.suffix.lower() == ".mkv":
-            muxing_progress = Progress(
-                TextColumn("[progress.description]{task.description}"),
-                SpinnerColumn(finished_text=""),
-                BarColumn(),
-                "•",
-                TimeRemainingColumn(compact=True, elapsed_when_finished=True)
-            )
-
-            with muxing_progress:
-                task = muxing_progress.add_task("Multiplexing...", total=100, start=True)
+            with Status("Updating Chapters in MKV Container..."):
                 out_path = video.with_stem(video.stem + " (Resynced)")
-                mux_chapters(
-                    video,
-                    chapters_file_path,
-                    out_path,
-                    progress=partial(muxing_progress.update, task_id=task)
-                )
+                shutil.copy(video, out_path)
+                set_chapters(out_path, chapters_file_path)
 
     print(":tada: Done!")
 
