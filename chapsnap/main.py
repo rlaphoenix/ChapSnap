@@ -22,6 +22,9 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, mux_cha
                    "frame is to be a Scene Change. Range: 0.0 (Impossible) - 1.0 (Definite).")
 @click.option("-o", "--offset", type=float, default=None,
               help="Offset to apply to each Chapter. A negative offset may result in fewer Chapters.")
+@click.option("--trim", type=int, multiple=True, default=None,
+              help="Remove n Chapters from the start of the Video. A negative value will remove n Chapters from"
+                   "the end of the Video. Timestamps will be offset respectively.")
 @click.option("-nf", "--no-forward", is_flag=True, default=False,
               help="Do not try to resync Chapters forward in time.")
 @click.option("-nb", "--no-backward", is_flag=True, default=False,
@@ -33,6 +36,7 @@ def main(
     chapters: Path | None,
     threshold: float,
     offset: float | None,
+    trim: list[int],
     no_forward: bool,
     no_backward: bool,
     keyframes: bool
@@ -53,6 +57,20 @@ def main(
             chapters = load_chapters_file(chapters)
         else:
             chapters = get_chapters(video)
+        if trim:
+            for amount in trim:
+                negative = amount < 0
+                trim_offset = float(chapters[amount]["start_time"]) - float(chapters[amount - 1]["start_time"])
+                if negative:
+                    chapters = chapters[:amount]
+                else:
+                    chapters = chapters[amount:]
+                for chapter in chapters:
+                    chapter["start_time"] = float(chapter["start_time"]) - trim_offset
+                    name = chapter.get("tags", {}).get("title")
+                    if name and datetime.strptime(name, "%H:%M:%S.%f"):
+                        chapter["tags"]["title"] = format_timestamp(chapter["start_time"])
+
         chapter_table = Table(title="Chapters")
         chapter_table.add_column("#", justify="right")
         chapter_table.add_column("Name")
