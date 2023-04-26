@@ -90,10 +90,14 @@ def main(
                 for chapter in chapters:
                     chapter["start_time"] = max(float(chapter["start_time"]) + offset, 0)
 
-            chapter_table = Table(title="Chapters")
-            chapter_table.add_column("#", justify="right")
-            chapter_table.add_column("Name")
-            chapter_table.add_column("Timestamp")
+            chapter_table = Table(
+                Column("#", justify="right"),
+                "Name",
+                "Timestamp",
+                title="Chapters",
+                caption=f"offset: {offset:.3f}" if offset else None,
+                caption_justify="right"
+            )
             for i, chapter in enumerate(chapters, start=1):
                 name = chapter.get("tags", {}).get("title")
                 timestamp = format_timestamp(float(chapter["start_time"]))
