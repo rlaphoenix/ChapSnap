@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 from datetime import timedelta, datetime
 from functools import partial
@@ -43,26 +44,46 @@ def get_chapters(video_path: Path) -> list[dict[str, Any]]:
 
 
 def load_chapters_file(file: Path) -> list[dict[str, Any]]:
-    tree = ElementTree.parse(file)
-    root = tree.getroot()
-
-    edition = root.find("EditionEntry")
-
     chapter_list = []
-    for chapter in edition.findall("ChapterAtom"):
-        start_time = chapter.find("ChapterTimeStart").text
-        name = chapter.find("ChapterDisplay").find("ChapterString").text
+    try:
+        tree = ElementTree.parse(file)
+    except ElementTree.ParseError:
+        data = file.read_text(encoding="utf8")
+        line_1_re = re.compile(r"^CHAPTER(?P<number>\d+)=(?P<timestamp>[\d\\.:]+)$")
+        line_2_re = re.compile(r"^CHAPTER(?P<number>\d+)NAME=(?P<name>[\d\\.:]+)$")
+        lines = [x.strip() for x in data.strip().splitlines()]
+        chapter_lines = zip(lines[::2], lines[1::2])
+        for line_1, line_2 in chapter_lines:
+            one_m = line_1_re.match(line_1)
+            two_m = line_2_re.match(line_2)
+            if not one_m or not two_m:
+                raise SyntaxError(f"An unexpected syntax error near:\n{line_1}\n{line_2}")
 
-        start_time = timestamp_to_seconds(start_time)
+            line_1_number, timestamp = one_m.groups()
+            line_2_number, name = two_m.groups()
+            if line_1_number != line_2_number:
+                raise SyntaxError(f"The chapter numbers ({line_1_number},{line_2_number}) do not match.")
+            if not timestamp:
+                raise SyntaxError(f"The timecode is missing from Chapter {line_1_number}.")
 
-        chapter_list.append({
-            "start_time": start_time,
+            chapter_list.append((timestamp, name))
+    else:
+        root = tree.getroot()
+        edition = root.find("EditionEntry")
+        for chapter in edition.findall("ChapterAtom"):
+            timestamp = chapter.find("ChapterTimeStart").text
+            name = chapter.find("ChapterDisplay").find("ChapterString").text
+            chapter_list.append((timestamp, name))
+
+    return [
+        {
+            "start_time": timestamp_to_seconds(timestamp),
             "tags": {
                 "title": name
             }
-        })
-
-    return chapter_list
+        }
+        for timestamp, name in chapter_list
+    ]
 
 
 def get_scene_changes(video_path: Path, threshold: float) -> list[dict[str, Any]]:
