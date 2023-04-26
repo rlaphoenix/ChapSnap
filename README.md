@@ -4,7 +4,7 @@ Resync Chapters by snapping them to Scene Changes.
 
 ## To-do
 
-- [ ] Automatically replace the chapters in the input video container.
+- [x] Automatically replace the chapters in the input video container.
 
 Likely lot's more.
 

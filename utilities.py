@@ -58,3 +58,12 @@ def get_scene_changes(video_path: Path, threshold: float) -> list[dict[str, Any]
     scene_changes = scene_changes["frames"]
 
     return scene_changes
+
+
+def mux_chapters(video_path: Path, chapters_path: Path, out_path: Path) -> int:
+    return subprocess.check_call([
+        "mkvmerge",
+        "-o", out_path,
+        "--chapters", chapters_path,
+        video_path
+    ])

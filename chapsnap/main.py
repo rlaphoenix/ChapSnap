@@ -8,7 +8,7 @@ from rich.status import Status
 from rich.table import Table
 from rich import print
 
-from utilities import get_chapters, get_scene_changes, format_timestamp
+from utilities import get_chapters, get_scene_changes, format_timestamp, mux_chapters
 
 
 @click.command(help="Snap Chapters to Scene Changes.")
@@ -125,7 +125,14 @@ def main(
     ])
     print(new_chapter_file)
 
-    video.with_suffix(f"{video.suffix}.retimed_chapters.txt").write_text(new_chapter_file, encoding="utf8")
+    chapters_file_path = video.with_suffix(f"{video.suffix}.retimed_chapters.txt")
+    chapters_file_path.write_text(new_chapter_file, encoding="utf8")
+
+    with Status("Muxing new Chapters..."):
+        out_path = video.with_stem(video.stem + " (Resynced)")
+        mux_chapters(video, chapters_file_path, out_path)
+
+    print(":tada: Done!")
 
 
 if __name__ == "__main__":
