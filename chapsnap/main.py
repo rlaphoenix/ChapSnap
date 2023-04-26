@@ -30,6 +30,8 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, load_ch
               help="Do not try to resync Chapters backward in time.")
 @click.option("-k", "--keyframes", is_flag=True, default=False,
               help="Only sync to Scene Changes on Keyframes (I-frames).")
+@click.option("--overwrite", is_flag=True, default=False,
+              help="Apply new Chapters to the input video file in-place, without making a duplicate.")
 def main(
     video: Path,
     chapters: Path | None,
@@ -38,7 +40,8 @@ def main(
     trim: list[int],
     no_forward: bool,
     no_backward: bool,
-    keyframes: bool
+    keyframes: bool,
+    overwrite: bool
 ):
     """
     Snap Chapters to Scene Changes.
@@ -213,8 +216,11 @@ def main(
 
         if video.suffix.lower() == ".mkv":
             with Status("Updating Chapters in MKV Container..."):
-                out_path = video.with_stem(video.stem + " (Resynced)")
-                shutil.copy(video, out_path)
+                if overwrite:
+                    out_path = video
+                else:
+                    out_path = video.with_stem(video.stem + " (Resynced)")
+                    shutil.copy(video, out_path)
                 set_chapters(out_path, chapters_file_path)
 
     print(":tada: Done!")
