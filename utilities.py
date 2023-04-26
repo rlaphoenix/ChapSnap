@@ -4,12 +4,19 @@ from datetime import timedelta, datetime
 from functools import partial
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree
 
 
 def format_timestamp(duration_seconds: float) -> str:
     """Convert Seconds to a HH:MM:SS.mss Timestamp string."""
     delta = timedelta(seconds=duration_seconds)
     return (datetime.min + delta).strftime("%H:%M:%S.%f")[:-3]
+
+
+def timestamp_to_seconds(timestamp: str) -> float:
+    """Convert a HH:MM:SS.mss Timestamp to Seconds."""
+    d = datetime.strptime(timestamp, "%H:%M:%S.%f")
+    return float(d.strftime("%S.%f"))
 
 
 def get_chapters(video_path: Path) -> list[dict[str, Any]]:
@@ -31,6 +38,29 @@ def get_chapters(video_path: Path) -> list[dict[str, Any]]:
     chapters = chapters["chapters"]
 
     return chapters
+
+
+def load_chapters_file(file: Path) -> list[dict[str, Any]]:
+    tree = ElementTree.parse(file)
+    root = tree.getroot()
+
+    edition = root.find("EditionEntry")
+
+    chapter_list = []
+    for chapter in edition.findall("ChapterAtom"):
+        start_time = chapter.find("ChapterTimeStart").text
+        name = chapter.find("ChapterDisplay").find("ChapterString").text
+
+        start_time = timestamp_to_seconds(start_time)
+
+        chapter_list.append({
+            "start_time": start_time,
+            "tags": {
+                "title": name
+            }
+        })
+
+    return chapter_list
 
 
 def get_scene_changes(video_path: Path, threshold: float) -> list[dict[str, Any]]:

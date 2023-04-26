@@ -11,11 +11,12 @@ from rich.progress import Progress
 from rich.progress import TextColumn, SpinnerColumn, BarColumn, TimeRemainingColumn
 from rich import print
 
-from utilities import get_chapters, get_scene_changes, format_timestamp, mux_chapters
+from utilities import get_chapters, get_scene_changes, format_timestamp, mux_chapters, load_chapters_file
 
 
-@click.command(help="Snap Chapters to Scene Changes.")
+@click.command()
 @click.argument("video", type=Path)
+@click.argument("chapters", type=Path, required=False)
 @click.option("-t", "--threshold", type=float, default=0.4,
               help="Threshold on Scene Change probability scores. The lower the value, the more unlikely the "
                    "frame is to be a Scene Change. Range: 0.0 (Impossible) - 1.0 (Definite).")
@@ -31,6 +32,7 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, mux_cha
               help="Only sync to Scene Changes on Keyframes (I-frames).")
 def main(
     video: Path,
+    chapters: Path | None,
     threshold: float,
     offset: float | None,
     no_forward: bool,
@@ -38,11 +40,22 @@ def main(
     no_resync: bool,
     keyframes: bool
 ):
+    """
+    Snap Chapters to Scene Changes.
+
+    \b
+    VIDEO       The video file to snap chapters to scene changes.
+    [CHAPTERS]  Optional chapters file if you want to use chapters from a file
+                rather than ones already muxed with the video.
+    """
     if offset is not None and not isinstance(offset, float):
         raise click.ClickException(f"Expected offset to be a {float} not {offset!r}")
 
     with Status("Getting Chapters..."):
-        chapters = get_chapters(video)
+        if chapters:
+            chapters = load_chapters_file(chapters)
+        else:
+            chapters = get_chapters(video)
         chapter_table = Table(title="Chapters")
         chapter_table.add_column("#", justify="right")
         chapter_table.add_column("Name")
