@@ -86,6 +86,9 @@ def main(
                         name = chapter.get("tags", {}).get("title")
                         if name and datetime.strptime(name, "%H:%M:%S.%f"):
                             chapter["tags"]["title"] = format_timestamp(chapter["start_time"])
+            if offset:
+                for chapter in chapters:
+                    chapter["start_time"] = max(float(chapter["start_time"]) + offset, 0)
 
             chapter_table = Table(title="Chapters")
             chapter_table.add_column("#", justify="right")
@@ -129,8 +132,6 @@ def main(
 
         for i, chapter in enumerate(chapters, start=1):
             start_time = float(chapter["start_time"])
-            if offset:
-                start_time = max(start_time + offset, 0)
 
             name = chapter.get("tags", {}).get("title")
 
