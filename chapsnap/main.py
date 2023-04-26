@@ -125,7 +125,7 @@ def main(
     ])
     print(new_chapter_file)
 
-    video.with_suffix(f".{video.suffix}.retimed_chapters.txt").write_text(new_chapter_file, encoding="utf8")
+    video.with_suffix(f"{video.suffix}.retimed_chapters.txt").write_text(new_chapter_file, encoding="utf8")
 
 
 if __name__ == "__main__":
