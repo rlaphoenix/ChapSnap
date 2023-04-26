@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 
 import click
 from rich.status import Status
 from rich.table import Table
+from rich.progress import Progress
+from rich.progress import TextColumn, SpinnerColumn, BarColumn, TimeRemainingColumn
 from rich import print
 
 from utilities import get_chapters, get_scene_changes, format_timestamp, mux_chapters
@@ -128,9 +131,23 @@ def main(
     chapters_file_path = video.with_suffix(f"{video.suffix}.retimed_chapters.txt")
     chapters_file_path.write_text(new_chapter_file, encoding="utf8")
 
-    with Status("Muxing new Chapters..."):
+    muxing_progress = Progress(
+        TextColumn("[progress.description]{task.description}"),
+        SpinnerColumn(finished_text=""),
+        BarColumn(),
+        "•",
+        TimeRemainingColumn(compact=True, elapsed_when_finished=True)
+    )
+
+    with muxing_progress:
+        task = muxing_progress.add_task("Multiplexing...", total=100, start=True)
         out_path = video.with_stem(video.stem + " (Resynced)")
-        mux_chapters(video, chapters_file_path, out_path)
+        mux_chapters(
+            video,
+            chapters_file_path,
+            out_path,
+            progress=partial(muxing_progress.update, task_id=task)
+        )
 
     print(":tada: Done!")
 
