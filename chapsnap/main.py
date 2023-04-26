@@ -153,7 +153,6 @@ def main(
             f"CHAPTER{i:02}NAME={name or f'Chapter {i:02}'}"
         ]
     ])
-    print(new_chapter_file)
 
     chapters_file_path = video.with_suffix(f"{video.suffix}.retimed_chapters.txt")
     chapters_file_path.write_text(new_chapter_file, encoding="utf8")
