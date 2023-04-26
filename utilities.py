@@ -15,8 +15,10 @@ def format_timestamp(duration_seconds: float) -> str:
 
 def timestamp_to_seconds(timestamp: str) -> float:
     """Convert a HH:MM:SS.mss Timestamp to Seconds."""
-    d = datetime.strptime(timestamp, "%H:%M:%S.%f")
-    return float(d.strftime("%S.%f"))
+    h, m, s = timestamp.split(":")
+    s, ms = s.split(".")
+    total_seconds = int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000.0
+    return total_seconds
 
 
 def get_chapters(video_path: Path) -> list[dict[str, Any]]:
