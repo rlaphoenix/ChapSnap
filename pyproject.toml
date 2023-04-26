@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ChapSnap"
-version = "1.0.0"
+version = "1.1.0"
 description = "Resync Chapters by snapping them to Scene Changes."
 authors = ["rlaphoenix <rlaphoenix@pm.me>"]
 readme = "README.md"
