@@ -30,6 +30,8 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, load_ch
               help="Do not try to resync Chapters backward in time.")
 @click.option("-k", "--keyframes", is_flag=True, default=False,
               help="Only sync to Scene Changes on Keyframes (I-frames).")
+@click.option("-0", "--zero", is_flag=True, default=False,
+              help="Force the first chapter to be at `00:00:00.000`, even after offsets and trims.")
 @click.option("--overwrite", is_flag=True, default=False,
               help="Apply new Chapters to the input video file in-place, without making a duplicate.")
 def main(
@@ -41,6 +43,7 @@ def main(
     no_forward: bool,
     no_backward: bool,
     keyframes: bool,
+    zero: bool,
     overwrite: bool
 ):
     """
@@ -90,6 +93,8 @@ def main(
             if offset:
                 for chapter in chapters:
                     chapter["start_time"] = max(float(chapter["start_time"]) + offset, 0)
+            if zero:
+                chapters[0]["start_time"] = 0.0
 
             chapter_table = Table(
                 Column("#", justify="right"),
