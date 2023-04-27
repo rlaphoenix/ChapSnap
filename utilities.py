@@ -100,7 +100,13 @@ def get_scene_changes(video_path: Path, threshold: float) -> list[dict[str, Any]
                 "-show_frames",
                 "-of", "json",
                 "-f", "lavfi",
-                f"movie=\\'{video_path.as_posix()}\\',select=gt(scene\\,{threshold})"
+                ",".join([
+                    x.replace(",", "\\,").replace("'", "\\'")
+                    for x in (
+                        f"movie='{video_path.as_posix()}'",
+                        f"select=gt(scene,{threshold})"
+                    )
+                ])
             ],
             stdout=subprocess.PIPE,
             universal_newlines=True
