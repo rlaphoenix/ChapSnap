@@ -99,7 +99,11 @@ def main(
                 chapters[0]["start_time"] = 0.0
             for chapter in chapters:
                 name = chapter.get("tags", {}).get("title")
-                if name and datetime.strptime(name, "%H:%M:%S.%f"):
+                try:
+                    datetime.strptime(name, "%H:%M:%S.%f")
+                except ValueError:
+                    pass
+                else:
                     chapter["tags"]["title"] = format_timestamp(float(chapter["start_time"]))
 
             chapter_table = Table(
@@ -215,7 +219,11 @@ def main(
 
                 start_time = closest
 
-                if datetime.strptime(name, "%H:%M:%S.%f"):
+                try:
+                    datetime.strptime(name, "%H:%M:%S.%f")
+                except ValueError:
+                    pass
+                else:
                     name = format_timestamp(start_time)
 
             new_chapter_timestamps[start_time] = name
