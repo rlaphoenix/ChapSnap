@@ -22,7 +22,7 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, load_ch
 @click.option("-o", "--offset", type=float, default=None,
               help="Offset to apply to each Chapter. A negative offset may result in fewer Chapters.")
 @click.option("--trim", type=int, multiple=True, default=None,
-              help="Remove n Chapters from the start of the Video. A negative value will remove n Chapters from"
+              help="Remove n Chapters from the start of the Video. A negative value will remove n Chapters from "
                    "the end of the Video. Timestamps will be offset respectively.")
 @click.option("-nf", "--no-forward", is_flag=True, default=False,
               help="Do not try to resync Chapters forward in time.")
@@ -32,6 +32,10 @@ from utilities import get_chapters, get_scene_changes, format_timestamp, load_ch
               help="Only sync to Scene Changes on Keyframes (I-frames).")
 @click.option("-0", "--zero", is_flag=True, default=False,
               help="Force the first chapter to be at `00:00:00.000`, even after offsets and trims.")
+@click.option("-c", "--chain", is_flag=True, default=False,
+              help="Chain sync adjustments from one Chapter to the next. E.g., Chapter 1 had -2, so Chapter 2 will "
+                   "begin with an offset of -2. Chapter 2 with -2 has a change of -1, so Chapter 3 will begin with "
+                   "an offset of -3 and so on.")
 @click.option("--overwrite", is_flag=True, default=False,
               help="Apply new Chapters to the input video file in-place, without making a duplicate.")
 def main(
@@ -44,6 +48,7 @@ def main(
     no_backward: bool,
     keyframes: bool,
     zero: bool,
+    chain: bool,
     overwrite: bool
 ):
     """
@@ -136,13 +141,17 @@ def main(
             "After",
             "Change",
             "Closest Scene Changes",
-            title="Chapter Modifications"
+            title="Chapter Modifications",
+            caption_justify="right"
         )
 
         new_chapter_timestamps = {}
+        offset_chains = []
 
         for i, chapter in enumerate(chapters, start=1):
             start_time = float(chapter["start_time"])
+            if offset_chains:
+                start_time = max(start_time + offset_chains[-1], 0)
 
             name = chapter.get("tags", {}).get("title")
 
@@ -190,6 +199,11 @@ def main(
                         "Removed, matched previous chapter"
                     )
                     continue
+
+                if chain and i != len(chapters):
+                    last_offset_chain = offset_chains[-1] if offset_chains else 0.0
+                    offset_chains.append(last_offset_chain + (closest - start_time))
+                    new_chapter_table.caption = f"offset chains: {','.join([f'{x:.3f}' for x in offset_chains])}"
 
                 new_chapter_table.add_row(
                     f"{i:02}",
