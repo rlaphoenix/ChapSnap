@@ -84,14 +84,13 @@ def main(
                 chapters = get_chapters(video)
             if trim:
                 for amount in trim:
-                    negative = amount < 0
-                    trim_offset = float(chapters[amount]["start_time"]) - float(chapters[amount - 1]["start_time"])
-                    if negative:
+                    if amount < 0:
                         chapters = chapters[:amount]
                     else:
+                        trim_offset = float(chapters[amount]["start_time"])
                         chapters = chapters[amount:]
-                    for chapter in chapters:
-                        chapter["start_time"] = float(chapter["start_time"]) - trim_offset
+                        for chapter in chapters:
+                            chapter["start_time"] = float(chapter["start_time"]) - trim_offset
             if offset:
                 for chapter in chapters:
                     chapter["start_time"] = max(float(chapter["start_time"]) + offset, 0)
